@@ -1,5 +1,14 @@
 # OnlineJobs.ph Job Scraper 🤖
 
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?logo=python&logoColor=white)](https://python.org)
+[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/engelgatus/onlinejobs-scraper/scraper.yml?branch=main&logo=github&label=Build)](https://github.com/engelgatus/onlinejobs-scraper/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Web Scraping](https://img.shields.io/badge/Web-Scraping-orange.svg?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDMgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)](https://github.com/topics/web-scraping)
+[![Discord](https://img.shields.io/badge/Discord-Integration-7289da.svg?logo=discord&logoColor=white)](https://discord.com)
+[![SQLite](https://img.shields.io/badge/Database-SQLite-blue.svg?logo=sqlite&logoColor=white)](https://sqlite.org)
+[![Ethical Scraping](https://img.shields.io/badge/Ethical-Scraping-green.svg?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDMgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)](https://github.com/topics/ethical-scraping)
+
 Automated job scraper that monitors OnlineJobs.ph for jobs matching your keywords and sends new findings to Discord twice daily.
 
 ## 🎯 Features
@@ -78,7 +87,7 @@ KEYWORDS = [
 DEFAULT_DAYS_BACK = 5
 
 # Max pages to scrape per keyword  
-MAX_PAGES_PER_KEYWORD = 10
+MAX_PAGES_PER_KEYWORD = 2
 ```
 
 ## 📅 Schedule
@@ -143,7 +152,7 @@ python main.py --help
 
 Each new job appears as a rich embed with:
 - ✅ Job title (clickable link to OnlineJobs.ph)
-- 🏢 Company name
+- 👤 Contact person (extracted from job listings)
 - 💼 Job type (Full-time/Part-time)
 - 🔍 Matched keyword
 - 💰 Salary (if available)
@@ -155,7 +164,7 @@ Each new job appears as a rich embed with:
 Built-in protections:
 - Random delays between requests (1-3 seconds)
 - Realistic browser headers
-- Maximum 10 pages per keyword
+- Maximum 2 pages per keyword
 - Batch Discord messages (10 jobs max)
 - Multiple parsing strategies for site changes
 
