@@ -32,7 +32,7 @@ jobs:
       run: mkdir -p data
     
     - name: Cache database
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: data/jobs.db
         key: jobs-db-${{ github.run_id }}
@@ -53,7 +53,7 @@ jobs:
     # Optional: Upload database as artifact for debugging
     - name: Upload database artifact
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: jobs-database
         path: data/jobs.db
