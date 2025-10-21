@@ -440,14 +440,16 @@ class DiscordSender:
             print(f"Error sending summary to Discord: {e}")
             return False
 
-    # Keep existing legacy methods for backward compatibility
+    # 🚫 DISABLE LEGACY METHODS TO PREVENT DOUBLE SUMMARIES
     def send_job_batch(self, jobs, batch_num, total_batches):
-        """Legacy method - redirects to new enhanced sending"""
-        return self.send_jobs_batch(jobs)
-    
+        """Legacy method - DISABLED to prevent double summaries"""
+        #print("⚠️ Legacy send_job_batch called - use send_jobs_batch instead")
+        return True  # Return success but do nothing
+
     def send_summary(self, total_jobs, new_jobs, keywords_searched):
-        """Legacy method - redirects to enhanced summary"""
-        return self.send_enhanced_summary(total_jobs, new_jobs, keywords_searched)
+        """Legacy method - DISABLED to prevent double summaries"""
+        #print("⚠️ Legacy send_summary called - summary already sent via send_jobs_batch")
+        return True  # Return success but do nothing
 
     def format_date(self, date_obj):
         """Legacy method - redirects to enhanced date formatting"""

@@ -50,7 +50,7 @@ class OnlineJobsScraper:
                 
                 soup = BeautifulSoup(response.content, 'html.parser')
                 
-                # FIXED: Use the correct selector based on debug results
+                # Use the correct selector
                 job_links = soup.find_all('a', href=re.compile(r'/jobseekers/job/'))
                 
                 # Filter out "See More" links and duplicates
@@ -113,30 +113,61 @@ class OnlineJobsScraper:
             job_title = job_link.get_text(strip=True)
             job_title = re.sub(r'\s+', ' ', job_title).strip()[:255]
             
-            # 🔥 EXTRACT CONTACT PERSON FROM JOB TITLE
+            # CONTACT PERSON EXTRACTION
             contact_person = ""
             
-            # Pattern: "Job Title + Job Type + Contact Person • Posted"
+            # CONTACT PERSON EXTRACTION  
             contact_patterns = [
-                r'(?:Full Time|Part Time|Any)\s*([A-Za-z\s&\.\-\']{3,40})\s*•\s*Posted',
-                r'(?:Full Time|Part Time|Any)\s*([A-Za-z\s&\.\-\']{3,40})\s*•',
-                r'\s([A-Za-z]{2,15}\s+[A-Za-z]{2,20}(?:\s+[A-Za-z]{2,20})?)\s*•\s*Posted',
+                # Pattern 1: Job Type + Contact Person (2-3 words) • Posted
+                r'(?:Full Time|Part Time|Any|Gig)\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})\s*•\s*Posted',
+                
+                # Pattern 2: Job Type + Contact Person (single word) • Posted
+                r'(?:Full Time|Part Time|Any|Gig)\s*([A-Z][a-z]{3,20})\s*•\s*Posted',
+                
+                # Pattern 3: Contact Person (2-3 words) • Posted (no job type)
+                r'\s([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})\s*•\s*Posted',
+                
+                # Pattern 4: Special case for "Hiring Manager", "Hiring admin", etc.
+                r'\s(Hiring\s+[A-Z][a-z]+)\s*•\s*Posted',
+                
+                # Pattern 5: Special case for company names ending in recognizable suffixes
+                r'\s([A-Z][A-Z]{2,}\s+[A-Z][a-z]+)\s*•\s*Posted',  # "MTZ Financials"
             ]
             
             for pattern in contact_patterns:
-                match = re.search(pattern, job_title, re.IGNORECASE)
+                match = re.search(pattern, job_title)
                 if match:
                     potential_contact = match.group(1).strip()
-                    # Validate it looks like a person's name
-                    if (len(potential_contact) > 3 and 
-                        len(potential_contact) < 50 and
-                        not re.match(r'^(Displaying|jobs|out|of|\d+|Posted|Oct|Nov|Dec|Jan|Feb)', potential_contact, re.IGNORECASE) and
-                        ' ' in potential_contact):
-                        contact_person = potential_contact
+                    
+                    # Validate it's a real name (not job type or other text)
+                    excluded_words = [
+                        'Full', 'Time', 'Part', 'Any', 'Gig', 'Posted', 'Oct', 'Nov', 'Dec', 
+                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+                        'jobs', 'Displaying', 'out', 'of', 'Remote', 'Urgent', 'Hiring',
+                        'ASAP', 'Immediate', 'Fixed', 'Price'
+                    ]
+                    
+                    # Check if it's a valid name 
+                    if (len(potential_contact) >= 3 and 
+                        len(potential_contact) <= 50 and
+                        not any(word.lower() in potential_contact.lower() for word in excluded_words) and
+                        not re.match(r'^\d', potential_contact) and  # Doesn't start with number
+                        re.match(r'^[A-Z]', potential_contact)):    # Starts with capital
+                        
+                        # Special handling for single words that should be expanded
+                        if potential_contact in ['Manager', 'Admin', 'Specialist'] and 'Hiring' in job_title:
+                            # Try to find "Hiring Manager" instead of just "Manager"
+                            hiring_match = re.search(r'(Hiring\s+' + potential_contact + ')', job_title, re.IGNORECASE)
+                            if hiring_match:
+                                contact_person = hiring_match.group(1)
+                            else:
+                                contact_person = potential_contact
+                        else:
+                            contact_person = potential_contact
                         break
             
-            # 🔧 FIX: Get parent element for company extraction
-            parent = job_link.parent  # ✅ FIXED: Define parent variable
+            # Get parent for company extraction
+            parent = job_link.parent
             company_name = "Company not listed"
             
             if parent:
@@ -161,7 +192,7 @@ class OnlineJobsScraper:
                 'job_id': job_id,
                 'title': job_title,
                 'company': company_name,
-                'contact_person_initial': contact_person,
+                'contact_person_initial': contact_person,  # Store the extracted contact
                 'url': job_url,
                 'posted_date': datetime.now(),
                 'job_type': 'Not specified',
@@ -174,7 +205,6 @@ class OnlineJobsScraper:
         except Exception as e:
             print(f"    Error in extract_job_data_from_link: {e}")
             return None
-
     
     def get_job_details(self, job_url):
         """Scrape detailed job information using precise HTML selectors"""
@@ -390,10 +420,16 @@ class OnlineJobsScraper:
                 if not self.db.job_exists(job_id):
                     print(f"  Processing new job: {job_data['title'][:50]}...")
                     
-                    # Get detailed info (remove debug prints)
+                    # Get detailed info
                     details = self.get_job_details(job_data['url'])
+
+                    # Use initial contact person as fallback
+                    if not details.get('contact_person') and job_data.get('contact_person_initial'):
+                        details['contact_person'] = job_data['contact_person_initial']
+                        print(f"    📝 Using extracted contact person: '{details['contact_person']}'")
+
                     job_data.update(details)
-                    
+
                     # Final keyword check
                     if self.matches_keywords(job_data):
                         if self.db.save_job(job_data):
