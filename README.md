@@ -265,6 +265,41 @@ Typical run statistics:
 - **Network Requests**: 20-100 per run
 - **Database Size**: ~1MB per 1000 jobs
 
+## 📋 Legal Notice
+
+This project is for **educational and personal portfolio purposes only**.
+
+### Compliance & Ethics
+- ✅ **Respects OnlineJobs.ph terms of service**
+- ✅ **Uses only publicly available job listings**
+- ✅ **Implements respectful scraping practices**
+- ✅ **Not for commercial use or data redistribution**
+- ✅ **Rate limited and server-friendly**
+
+### Technical Safeguards
+- **Request delays**: 1-3 seconds between requests
+- **Limited scope**: Maximum 2 pages per keyword  
+- **Robots.txt compliance**: Automated checking
+- **No parallel requests**: Single-threaded, respectful access
+- **Standard headers**: Transparent browser identification
+
+### Data Handling
+- **Public information only**: Job titles, descriptions, and contact details
+- **No personal data storage**: No private or sensitive information
+- **Local use only**: Personal job notifications via Discord
+- **No redistribution**: Data used solely for individual job search
+
+### Purpose Statement
+This scraper demonstrates:
+- Professional Python development skills
+- Ethical web scraping practices  
+- Database and API integration
+- Automated workflow implementation
+- Respectful data handling
+
+**Note**: This project showcases technical capabilities in a responsible manner, adhering to ethical scraping guidelines and respecting website terms of service.
+
+
 ## 🤝 Contributing
 
 1. Fork the repository

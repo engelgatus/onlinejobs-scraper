@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scraper.py - Main OnlineJobs.ph scraper (FIXED VERSION)
+scraper.py - Main OnlineJobs.ph scraper
 """
 
 import requests
@@ -29,8 +29,37 @@ class OnlineJobsScraper:
             'Accept-Language': 'en-US,en;q=0.5',
             'Connection': 'keep-alive',
         })
-        
+
         self.keywords = Config.KEYWORDS
+        
+        # Check robots.txt compliance
+        self.check_robots_txt()
+
+    def check_robots_txt(self):
+        """Check robots.txt for scraping guidelines"""
+        try:
+            robots_url = f"{self.base_url}/robots.txt"
+            print("🤖 Checking robots.txt compliance...")
+            
+            response = self.session.get(robots_url, timeout=10)
+            if response.status_code == 200:
+                robots_content = response.text.lower()
+                
+                # Check if scraping is explicitly disallowed
+                if 'disallow: /' in robots_content and 'user-agent: *' in robots_content:
+                    print("⚠️ robots.txt contains general disallow directive")
+                else:
+                    print("✅ robots.txt check passed")
+            else:
+                print("⚠️ No robots.txt found - proceeding with respectful scraping")
+                
+        except Exception as e:
+            print(f"⚠️ Could not check robots.txt: {e}")
+            
+        print("📋 Using respectful scraping practices:")
+        print(f"   • Delays: {Config.RESPECTFUL_DELAY_MIN}-{Config.RESPECTFUL_DELAY_MAX}s between requests")
+        print(f"   • Limit: {Config.MAX_PAGES_PER_KEYWORD} pages per keyword")
+        print("   • User-Agent: Standard browser headers")
         
     def search_jobs_by_keyword(self, keyword, days_back=5):
         """Search for jobs containing specific keyword"""
@@ -53,14 +82,25 @@ class OnlineJobsScraper:
                 # Use the correct selector
                 job_links = soup.find_all('a', href=re.compile(r'/jobseekers/job/'))
                 
-                # Filter out "See More" links and duplicates
+                # 🔧 IMPROVED FILTERING
                 unique_jobs_on_page = {}
+                
                 for link in job_links:
                     href = link.get('href')
                     text = link.get_text(strip=True)
                     
-                    # Skip "See More" links and empty links
-                    if text == 'See More' or not text or len(text) < 10:
+                    # More precise filtering - avoid removing legitimate jobs
+                    if (text == 'See More' or 
+                        not text or 
+                        len(text) < 5 or  # Reduced from 10 to 5 - allows shorter job titles
+                        text.lower() in ['see more', 'view more', 'load more'] or  # Common pagination text
+                        href in ['#', 'javascript:', 'javascript:void(0)']):  # Invalid links
+                        continue
+                    
+                    # Skip obvious non-job links
+                    if any(skip_text in text.lower() for skip_text in [
+                        'displaying', 'out of', 'jobs found', 'next page', 'previous page'
+                    ]):
                         continue
                         
                     # Extract job ID to avoid duplicates
@@ -72,6 +112,7 @@ class OnlineJobsScraper:
                         job_id = job_id_match.group(1)
                         if job_id not in unique_jobs_on_page:
                             unique_jobs_on_page[job_id] = link
+
                 
                 if not unique_jobs_on_page:
                     print(f"    No unique job links found on page {page}")
@@ -96,7 +137,7 @@ class OnlineJobsScraper:
                     break
                     
                 page += 1
-                time.sleep(random.uniform(3, 6))
+                time.sleep(random.uniform(Config.RESPECTFUL_DELAY_MIN, Config.RESPECTFUL_DELAY_MAX))
                 
             except Exception as e:
                 print(f"  Error searching page {page} for '{keyword}': {e}")
@@ -116,7 +157,7 @@ class OnlineJobsScraper:
             # CONTACT PERSON EXTRACTION
             contact_person = ""
             
-            # CONTACT PERSON EXTRACTION  
+            # CONTACT PERSON EXTRACTION PATTERNS
             contact_patterns = [
                 # Pattern 1: Job Type + Contact Person (2-3 words) • Posted
                 r'(?:Full Time|Part Time|Any|Gig)\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})\s*•\s*Posted',
@@ -209,7 +250,7 @@ class OnlineJobsScraper:
     def get_job_details(self, job_url):
         """Scrape detailed job information using precise HTML selectors"""
         try:
-            time.sleep(random.uniform(1, 2))
+            time.sleep(random.uniform(Config.RESPECTFUL_DELAY_MIN, Config.RESPECTFUL_DELAY_MAX))
             response = self.session.get(job_url, timeout=15)
             response.raise_for_status()
             
@@ -257,7 +298,7 @@ class OnlineJobsScraper:
                     salary = match.group(1).strip()
                     break
             
-            # 4. Extract Contact Person - SIMPLIFIED VERSION
+            # 4. Extract Contact Person
             contact_person = ""
             
             # Look for contact person patterns in HTML
@@ -348,7 +389,6 @@ class OnlineJobsScraper:
                 'posted_date_clean': "",
                 'description': "",
             }
-
 
     def is_within_date_range(self, posted_date, days_back):
         """Check if job is within date range"""
@@ -444,7 +484,7 @@ class OnlineJobsScraper:
             except Exception as e:
                 print(f"  Error processing job {job_id}: {e}")
         
-        # 🔥 CRITICAL: SEND TO DISCORD (this was missing!)
+        # Send to Discord
         if new_jobs:
             print(f"📤 Sending {len(new_jobs)} new jobs to Discord")
             try:
@@ -459,7 +499,6 @@ class OnlineJobsScraper:
             print("📭 No new jobs found")
         
         return len(new_jobs)
-
 
 if __name__ == "__main__":
     scraper = OnlineJobsScraper()
