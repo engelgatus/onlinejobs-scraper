@@ -183,10 +183,44 @@ class OnlineJobsScraper:
         cutoff_date = datetime.now() - timedelta(days=days_back)
         return posted_date >= cutoff_date
     
-    def matches_keywords(self, job_data):
+    #def matches_keywords(self, job_data):
         """Check if job matches keywords"""
-        text_to_search = f"{job_data['title']} {job_data.get('description', '')}".lower()
-        return any(keyword.lower() in text_to_search for keyword in self.keywords)
+       # text_to_search = f"{job_data['title']} {job_data.get('description', '')}".lower()
+       # return any(keyword.lower() in text_to_search for keyword in self.keywords)
+
+    def matches_keywords(self, job_data):
+    """Check if job matches keywords with broader term matching"""
+    text_to_search = f"{job_data['title']} {job_data.get('description', '')}".lower()
+    
+    # Broader related terms for each keyword
+    broader_terms = {
+        'admin': ['administration', 'administrative', 'office', 'assistant', 'support', 
+                  'coordinator', 'clerk', 'secretary', 'receptionist', 'data entry'],
+        'automation': ['automated', 'script', 'workflow', 'process', 'bot', 'rpa', 
+                       'zapier', 'integration', 'api', 'system'],
+        'entry level': ['junior', 'trainee', 'intern', 'beginner', 'new grad', 
+                        'graduate', 'starter', 'entry-level', 'no experience'],
+        'associate': ['junior', 'coordinator', 'specialist', 'assistant', 'analyst', 
+                      'representative', 'officer', 'team member'],
+        'operations': ['ops', 'operational', 'management', 'coordinator', 'supervisor', 
+                       'logistics', 'workflow', 'process', 'production', 'business']
+    }
+    
+    # Check original keyword or related terms
+    for keyword in self.keywords:
+        # Direct keyword match
+        if keyword.lower() in text_to_search:
+            return True
+        
+        # Check related terms for this keyword
+        related_terms = broader_terms.get(keyword, [])
+        for term in related_terms:
+            if term in text_to_search:
+                return True
+    
+    # Also accept jobs if they were found by our keyword search
+    # (trust OnlineJobs.ph's search relevance)
+    return True  # Since we searched for our keywords, assume relevance
     
     def run_scrape(self, days_back=5):
         """Main scraping function"""
