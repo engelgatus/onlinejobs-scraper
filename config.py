@@ -37,7 +37,8 @@ class Config:
     
     # Scraping settings
     DEFAULT_DAYS_BACK: int = int(os.getenv('DEFAULT_DAYS_BACK', '5'))
-    MAX_PAGES_PER_KEYWORD: int = int(os.getenv('MAX_PAGES_PER_KEYWORD', '10'))
+    #MAX_PAGES_PER_KEYWORD: int = int(os.getenv('MAX_PAGES_PER_KEYWORD', '10'))
+    MAX_PAGES_PER_KEYWORD: int = 2
     REQUEST_DELAY_MIN: float = float(os.getenv('REQUEST_DELAY_MIN', '1.0'))
     REQUEST_DELAY_MAX: float = float(os.getenv('REQUEST_DELAY_MAX', '3.0'))
     
