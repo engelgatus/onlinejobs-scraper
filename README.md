@@ -11,6 +11,8 @@
 
 Automated job scraper that monitors OnlineJobs.ph for jobs matching your keywords and sends new findings to Discord twice daily.
 
+> **⚠️ Production Note:** This is a portfolio showcase repository. The automated scheduling is disabled in this public version. For actual deployment, use a private repository with proper environment variables and GitHub Actions enabled.
+
 ## 🎯 Features
 
 - **Smart Filtering**: Searches for jobs with keywords like "automation", "entry level", "associate", "admin", "operations"
