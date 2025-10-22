@@ -9,18 +9,28 @@
 [![SQLite](https://img.shields.io/badge/Database-SQLite-blue.svg?logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Ethical Scraping](https://img.shields.io/badge/Ethical-Scraping-green.svg?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDMgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)](https://github.com/topics/ethical-scraping)
 
-Automated job scraper that monitors OnlineJobs.ph for jobs matching your keywords and sends new findings to Discord twice daily.
+Intelligent job scraper that monitors OnlineJobs.ph for relevant positions while filtering out unwanted job types. Features smart keyword matching, exclusion filtering, and automated Discord notifications.
 
 > **⚠️ Production Note:** This is a portfolio showcase repository. The automated scheduling is disabled in this public version. For actual deployment, use a private repository with proper environment variables and GitHub Actions enabled.
 
-## 🎯 Features
+## 🎯 Key Features
 
-- **Smart Filtering**: Searches for jobs with keywords like "automation", "entry level", "associate", "admin", "operations"
-- **Duplicate Prevention**: SQLite database tracks scraped jobs to avoid spam
-- **Discord Integration**: Sends formatted job alerts with clickable links
-- **Automated Schedule**: Runs twice daily via GitHub Actions (free tier)
-- **Date Filtering**: Configurable lookback period (default: 5 days)
-- **Production Ready**: Error handling, rate limiting, and robust parsing
+### ✅ **Smart Job Filtering**
+- **Keyword Matching**: Searches for "automation", "entry level", "associate", "admin", "operations"
+- **🆕 Exclusion Filtering**: Automatically removes customer service, call center, and telemarketing jobs
+- **Broader Term Recognition**: Matches related terms (e.g., "administrative" matches "admin")
+- **Professional Quality**: Only relevant positions reach your Discord
+
+### 🤖 **Advanced Automation**
+- **Duplicate Prevention**: SQLite database prevents job spam
+- **Contact Extraction**: AI-powered contact person identification
+- **Discord Integration**: Rich embed notifications with clickable links
+- **Scheduled Runs**: Automated twice-daily execution via GitHub Actions
+
+### 🛡️ **Ethical & Reliable**
+- **Respectful Scraping**: Rate limiting and robots.txt compliance
+- **Error Handling**: Robust parsing with fallback strategies
+- **Production Ready**: Professional logging and monitoring
 
 ## ⚡ Quick Setup
 
@@ -29,7 +39,7 @@ Automated job scraper that monitors OnlineJobs.ph for jobs matching your keyword
 1. Go to your Discord server → Server Settings → Integrations
 2. Click "Create Webhook" 
 3. Name it "OnlineJobs Bot"
-4. Select your "Command Center" channel
+4. Select your target channel (e.g., "job-alerts")
 5. Copy the webhook URL
 
 ### 2. Set Up Repository
@@ -73,10 +83,10 @@ python main.py --days 1
 
 ## 🔧 Configuration
 
-Edit `config.py` to customize:
+### Basic Keywords (config.py)
 
 ```python
-# Keywords to search for
+# Jobs to SEARCH FOR
 KEYWORDS = [
     "automation",
     "entry level", 
@@ -84,13 +94,88 @@ KEYWORDS = [
     "admin",
     "operations"
 ]
-
-# Days to look back on first scrape
-DEFAULT_DAYS_BACK = 5
-
-# Max pages to scrape per keyword  
-MAX_PAGES_PER_KEYWORD = 2
 ```
+
+### 🆕 **Exclusion Filtering** (New Feature!)
+
+Filter out unwanted job types automatically:
+
+```python
+# Jobs to EXCLUDE from results
+EXCLUDED_KEYWORDS = [
+    "outbound call",
+    "inbound sales", 
+    "cold calling",
+    "appointment setter",
+    "customer service",
+    "call center",
+    "phone support",
+    "telemarketing"
+]
+```
+
+### ⚙️ **How to Customize Your Exclusions**
+
+#### Method 1: Edit config.py (Permanent)
+
+1. Open `config.py` in your repository
+2. Find the `EXCLUDED_KEYWORDS` list
+3. Add or remove keywords as needed:
+
+```python
+EXCLUDED_KEYWORDS = [
+    "outbound call",
+    "inbound sales", 
+    "cold calling",
+    "appointment setter",
+    "customer service",
+    "call center",
+    "phone support",
+    "telemarketing",
+    # Add your own exclusions:
+    "data entry clerk",
+    "social media manager",
+    "content writer"
+]
+```
+
+4. Commit and push your changes
+5. GitHub Actions will use the new exclusions on next run
+
+#### Method 2: Environment Variable (Temporary/Testing)
+
+```bash
+# For local testing
+export EXCLUDED_KEYWORDS="customer service,call center,telemarketing,data entry"
+python main.py --days 1
+```
+
+```yaml
+# For GitHub Actions (add to repository secrets)
+EXCLUDED_KEYWORDS: "customer service,call center,telemarketing,data entry"
+```
+
+### 🎯 **Exclusion Examples**
+
+| Will Filter Out ❌ | Will Keep ✅ |
+|---|---|
+| "Customer Service Representative" | "Administrative Assistant" |
+| "Outbound Call Center Agent" | "Operations Coordinator" |
+| "Telemarketing Specialist" | "Automation Engineer" |
+| "Cold Calling Expert" | "Entry Level Data Analyst" |
+| "Phone Support Technician" | "Business Associate" |
+| "Appointment Setter - Sales" | "Office Administrator" |
+
+### 📊 **Filter Performance**
+
+The exclusion system processes jobs in this order:
+
+1. **🔍 Search** - Find jobs matching your KEYWORDS
+2. **🚫 Exclude** - Remove jobs containing EXCLUDED_KEYWORDS  
+3. **✅ Validate** - Check against broader term matching
+4. **📤 Deliver** - Send high-quality jobs to Discord
+
+**Result**: Significant improvement in job relevance.
 
 ## 📅 Schedule
 
@@ -160,6 +245,7 @@ Each new job appears as a rich embed with:
 - 💰 Salary (if available)
 - 📝 Description preview
 - 📅 Posting date
+- 🚫 **Exclusion status** (filtered jobs show in logs)
 
 ## 🚫 Anti-Bot Measures
 
@@ -177,6 +263,12 @@ Built-in protections:
 - Verify keywords are relevant 
 - Try increasing `--days` parameter
 - Check scraper logs for parsing errors
+- **🆕 Check if exclusions are too broad** - temporarily remove exclusions to test
+
+### Too many unwanted jobs
+- **🆕 Add more exclusion keywords** to `EXCLUDED_KEYWORDS`
+- Check Discord output for common patterns in unwanted jobs
+- Refine your keyword strategy
 
 ### Discord not working
 - Test webhook: `python main.py --test-discord`
@@ -199,11 +291,11 @@ onlinejobs-scraper/
 │       └── scraper.yml          # GitHub Actions workflow
 ├── data/
 │   └── jobs.db                  # SQLite database (auto-created)
-├── config.py                    # Configuration settings
+├── config.py                    # 🆕 Configuration + exclusions
 ├── database.py                  # SQLite database operations
 ├── discord_sender.py            # Discord webhook integration
 ├── main.py                      # CLI entry point
-├── scraper.py                   # Core scraping logic
+├── scraper.py                   # 🆕 Enhanced filtering logic
 ├── requirements.txt             # Python dependencies
 ├── .gitignore                   # Git ignore rules
 └── README.md                    # This file
@@ -213,60 +305,21 @@ onlinejobs-scraper/
 
 1. **Keyword Search**: Searches OnlineJobs.ph for each configured keyword
 2. **Job Extraction**: Parses job cards using multiple strategies
-3. **Duplicate Check**: Compares against SQLite database
-4. **Detail Scraping**: Visits individual job pages for full info
-5. **Keyword Validation**: Final check against title + description
-6. **Discord Notification**: Sends new jobs as rich embeds
-7. **Database Update**: Marks jobs as sent, logs session
-
-## 📈 GitHub Actions Free Tier
-
-- ✅ 2,000 minutes per month
-- ✅ This scraper uses ~3-5 minutes per run
-- ✅ 60 runs per month = ~300 minutes used
-- ✅ Plenty of headroom for twice daily automation
-
-## 🎛️ Advanced Usage
-
-### Custom Keywords
-```python
-# Add to config.py
-KEYWORDS = [
-    "python developer",
-    "virtual assistant", 
-    "data entry",
-    "customer service",
-    "social media"
-]
-```
-
-### Different Schedule
-```yaml
-# In .github/workflows/scraper.yml
-schedule:
-  - cron: '0 6,12,18 * * *'  # 3 times daily
-  - cron: '0 9 * * 1-5'      # Weekdays only at 9 AM
-```
-
-### Local Development
-```bash
-# Set up virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# or
-venv\Scripts\activate     # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run with debug output
-python main.py --days 1
-```
+3. **🆕 Exclusion Filter**: Removes unwanted job types (customer service, etc.)
+4. **Duplicate Check**: Compares against SQLite database
+5. **Detail Scraping**: Visits individual job pages for full info
+6. **Keyword Validation**: Final check against title + description with broader terms
+7. **Discord Notification**: Sends filtered, high-quality jobs as rich embeds
+8. **Database Update**: Marks jobs as sent, logs session
 
 ## 🔐 Environment Variables
 
-- `DISCORD_WEBHOOK_URL` - Required. Your Discord webhook URL
-- `GITHUB_ACTIONS` - Auto-set by GitHub Actions
+| Variable | Required | Description | Example |
+|----------|----------|-------------|----------|
+| `DISCORD_WEBHOOK_URL` | ✅ Yes | Your Discord webhook URL | `https://discord.com/api/webhooks/...` |
+| `KEYWORDS` | ❌ Optional | Custom search keywords | `"admin,automation,operations"` |
+| `EXCLUDED_KEYWORDS` | ❌ Optional | Custom exclusion keywords | `"customer service,call center"` |
+| `GITHUB_ACTIONS` | ❌ Auto-set | GitHub Actions indicator | `"true"` (auto-detected) |
 
 ## 📊 Performance
 
@@ -300,17 +353,6 @@ This project is for **educational and personal portfolio purposes only**.
 - **Local use only**: Personal job notifications via Discord
 - **No redistribution**: Data used solely for individual job search
 
-### Purpose Statement
-This scraper demonstrates:
-- Professional Python development skills
-- Ethical web scraping practices  
-- Database and API integration
-- Automated workflow implementation
-- Respectful data handling
-
-**Note**: This project showcases technical capabilities in a responsible manner, adhering to ethical scraping guidelines and respecting website terms of service.
-
-
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -318,6 +360,13 @@ This scraper demonstrates:
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
+
+### 🆕 **Contributing Ideas**
+- Additional exclusion keywords for common job types
+- Better contact person extraction patterns
+- Enhanced salary parsing
+- Alternative notification channels (Slack, Telegram)
+- Job categorization and tagging
 
 ## 📄 License
 
@@ -328,7 +377,10 @@ This project is open source and available under the MIT License.
 - Create an issue for bugs or feature requests
 - Check existing issues before creating new ones
 - Provide logs and error messages when reporting problems
+- **🆕 Include your exclusion keywords when reporting filtering issues**
 
 ---
 
-**Happy job hunting! 🎯**
+**Happy job hunting! 🎯** 
+
+*Now with much cleaner, more relevant results thanks to smart exclusions.*
