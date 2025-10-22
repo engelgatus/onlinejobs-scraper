@@ -35,6 +35,30 @@ class Config:
         KEYWORDS = [k.strip() for k in env_keywords.split(',') if k.strip()]
     
     # ============================================================================
+    # JOB FILTERING CONFIGURATION  
+    # ============================================================================
+
+    # Keywords to EXCLUDE from job results - these will filter out unwanted jobs
+    EXCLUDED_KEYWORDS: List[str] = [
+        "outbound call",
+        "inbound sales", 
+        "cold calling",
+        "appointment setter",
+        "customer service",
+        "call center",
+        "phone support",
+        "telemarketing"
+    ]
+
+    # Override excluded keywords from environment if provided
+    env_excluded = os.getenv('EXCLUDED_KEYWORDS', '').strip()
+    if env_excluded:
+        EXCLUDED_KEYWORDS = [k.strip().lower() for k in env_excluded.split(',') if k.strip()]
+    else:
+        # Ensure they're lowercase for consistent matching
+        EXCLUDED_KEYWORDS = [k.lower() for k in EXCLUDED_KEYWORDS]
+    
+    # ============================================================================
     # INTEGRATION SETTINGS
     # ============================================================================
     
@@ -105,6 +129,12 @@ class Config:
         if cls.RESPECTFUL_DELAY_MAX < cls.RESPECTFUL_DELAY_MIN:
             issues.append("RESPECTFUL_DELAY_MAX must be greater than RESPECTFUL_DELAY_MIN")
         
+        # Validate excluded keywords
+        if not cls.EXCLUDED_KEYWORDS:
+            print("ℹ️  No keywords configured for exclusion - all matching jobs will be included")
+        else:
+            print(f"🚫 Excluding jobs containing: {', '.join(cls.EXCLUDED_KEYWORDS)}")
+        
         return issues
     
     @classmethod
@@ -112,6 +142,7 @@ class Config:
         """Print current configuration (safe for logging)"""
         print("=== Configuration ===")
         print(f"Keywords: {', '.join(cls.KEYWORDS)}")
+        print(f"Excluded Keywords: {', '.join(cls.EXCLUDED_KEYWORDS)}")
         print(f"Days back: {cls.DEFAULT_DAYS_BACK}")
         print(f"Max pages per keyword: {cls.MAX_PAGES_PER_KEYWORD}")
         print(f"Database path: {cls.DATABASE_PATH}")
@@ -164,6 +195,6 @@ if Config.IS_GITHUB_ACTIONS:
 
 # Project metadata for professional documentation
 PROJECT_NAME = "OnlineJobs.ph Ethical Job Scraper"
-PROJECT_VERSION = "1.0.0"
+PROJECT_VERSION = "1.1.0"
 PROJECT_PURPOSE = "Educational portfolio project demonstrating ethical web scraping practices"
 COMPLIANCE_STATEMENT = "This project adheres to respectful scraping guidelines and uses only publicly available information"
