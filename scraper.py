@@ -396,10 +396,16 @@ class OnlineJobsScraper:
         return posted_date >= cutoff_date
 
     def matches_keywords(self, job_data):
-        """Check if job matches keywords with broader term matching"""
+        """Check if job matches keywords with broader term matching AND exclusion filter"""
         text_to_search = f"{job_data['title']} {job_data.get('description', '')}".lower()
         
-        # Broader related terms for each keyword
+        # 🚫 FIRST: Check for excluded keywords - immediate rejection
+        for excluded_keyword in Config.EXCLUDED_KEYWORDS:
+            if excluded_keyword in text_to_search:
+                print(f"    ⏭️  Excluded due to keyword: '{excluded_keyword}' in '{job_data['title'][:50]}...'")
+                return False
+        
+        # ✅ THEN: Check for wanted keywords (existing logic)
         broader_terms = {
             'admin': ['administration', 'administrative', 'office', 'assistant', 'support', 
                     'coordinator', 'clerk', 'secretary', 'receptionist', 'data entry'],
